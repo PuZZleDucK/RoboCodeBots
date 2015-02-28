@@ -63,21 +63,21 @@ public class P3_DeD_PaniC extends Robot {
 
 	    		}
 	    		
-	    		if(scanTarget) {
+	    		if(scanTarget) { // try to 'rescan' current target
 	    			scanTarget = false;
-			    	turnRadarLeft(15);
-			    	turnRadarRight(30);
+			    	turnRadarRight(15);
+			    	turnRadarLeft(30);
 	    		} else {
-			    	turnRadarRight(20);
+			    	turnRadarRight(20); // or just keep looking
 	    		}
-		    	if ((getGunHeat() == 0 && getVelocity() == 0 && scanSinceStill)
-		    			|| (getGunHeat() == 0 && scanSinceStill)) {
+		    	if ((getGunHeat() == 0)) {
 	    			setBodyColor(Color.green);
+//	    			if(getEnergy() > 3.0 && (getVelocity() == 0 || getOthers() > 1)) { //still for last shot
+//	    				fireBullet(getEnergy());
+//	    			}
 	    			if(getEnergy() > 3.0 && (getVelocity() == 0 || getOthers() > 1)) { //still for last shot
-	    				fireBullet(getEnergy());
+	    				lastShot = fireBullet(3);// store shot bullets, not used
 	    			}
-		    		lastShot = fireBullet(3);//full power not firePower, now accurate
-		    		
 		    		if(lastShot != null) {
 		    			lastShot.getVelocity();//not sure why
 		    			lastShot.getHeadingRadians();
@@ -104,6 +104,7 @@ public class P3_DeD_PaniC extends Robot {
 //	    	}
 //	    	turnGunRight(turretDelta);
 //	    	 
+
 	    	lastKnownBearing = e.getBearing();
 	    	lastKnownDelta = getHeading() + e.getBearing();
 	    	double enemyX = getX() + e.getDistance() * getHeading();
@@ -128,29 +129,29 @@ public class P3_DeD_PaniC extends Robot {
 	    	if(invert) {
 	    		turnGunAmt = -turnGunAmt;
 	    	}
-	    	if(enemyStill) {
-		    	turnGunRight(turnGunAmt);
-	    	} else {
-		    	turnGunRight(37);//random
-//	    		if (turnGunAmt > 0) {
-//			    	turnGunRight(turnGunAmt*2);
-//	    		} else {
-//			    	turnGunRight(-(turnGunAmt*2));
-//	    		}
-	    	}
+    		if (turnGunAmt > 0) {
+    			turnGunRight(turnGunAmt);
+    		} else {
+    			turnGunLeft(-(turnGunAmt));
+    		}
+
 	    	
-	    	double enemyDistance = e.getDistance(); // shoot faster at further targets
+	    	double enemyDistance = e.getDistance(); // shoot faster at further targets, not used anymore
 	    	double distanceRatio = enemyDistance/((getBattleFieldHeight()+getBattleFieldWidth())/2); // should be ~0 to ~1
 	    	firePower = 5 - (distanceRatio * 3); // 2~3ish
 	    			
 	    	double newEnergy = e.getEnergy();
 	    	boolean targetFired = ((targetsEnergy-newEnergy) >= 0.1 || (targetsEnergy-newEnergy) <= -0.1);// target probably fired
 	    	
+	    	if(enemyDistance < 200) { // don't stay close
+	    		panicDistance = 300;
+	    	}
+	    	
 	    	if(getOthers() == 1 && targetFired) { 
     			setBodyColor(Color.yellow);
     			scanSinceStill = false;
-	    		if ( ((lastKnownBearing < 40) && (lastKnownBearing > -40))
-	    				|| ((lastKnownBearing < -140) || (lastKnownBearing > 140)) ) { //err away from head on charges during panic?!? 
+	    		if ( ((lastKnownBearing < 30) && (lastKnownBearing > -30))
+	    				|| ((lastKnownBearing < -150) || (lastKnownBearing > 150)) ) { //err away from head on charges during panic?!? 
 	    			
 	    			setBodyColor(Color.red);
 	    			panicTurn = 90;//if all else fails, sharp left
@@ -162,7 +163,7 @@ public class P3_DeD_PaniC extends Robot {
 	    			ahead(panicDistance);
 	    		}
 	    		panicDir = !panicDir;
-	    		panicDistance = (rng.nextDouble()*80) + 40;//celerity
+	    		panicDistance = (rng.nextDouble()*80) + 120;//celerity
 	    		panicTurn = (rng.nextDouble()*70) - 35;//faster, tighter
 
 	    		targetsEnergy = newEnergy; //store for next tick
@@ -180,7 +181,7 @@ public class P3_DeD_PaniC extends Robot {
 	    			ahead(panicDistance);
 	    		}
 	    		panicDir = !panicDir;
-	    		panicDistance = (rng.nextDouble()*80) + 60;//
+	    		panicDistance = (rng.nextDouble()*80) + 70;//
 	    		panicTurn = (rng.nextDouble()*180) - 90;//
 	    		
 	    	}//fire
